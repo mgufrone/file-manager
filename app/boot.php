@@ -1,7 +1,13 @@
 <?php
+/**
+* Simple File Manager for your webapps
+* @author Mochamad Gufron
+* @email mgufronefendi@gmail.com
+*/
 
 require_once __DIR__.'/../vendor/autoload.php';
 
+// Initiating needed dependencies
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,6 +18,8 @@ use Silex\Provider\SessionServiceProvider;
 use Silex\Provider\TwigServiceProvider;
 use Symfony\Component\Yaml\Parser;
 use FileService\FileManagerService;
+
+// registering needed service and providers
 $app = new Silex\Application();
 Request::enableHttpMethodParameterOverride();
 $yaml = new Parser;
@@ -23,12 +31,18 @@ $app->register(new SessionServiceProvider());
 $app->register(new TwigServiceProvider(), array(
     'twig.path' => __DIR__.'/views',
 ));
-
 $app->register(new FileManagerService(), $config);
+
+// Routing
+
+/**
+* @method GET
+* @route /
+* show index or landing page
+*/
 $app->get('/',function() use($app){
 	return $app['twig']->render();
 })->bind('home');
-// print $app['file.path'];
 
 $app->get('files.json',function() use($app){
 	$request = $app['request'];

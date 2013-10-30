@@ -120,4 +120,9 @@ class ListTest extends WebTestCase
 		if(file_exists($path.'/'.$file))
 			rmdir($path.'/'.$file);
 	}
+
+	public function testUpload()
+	{
+		
+	}
 }
