@@ -1,6 +1,8 @@
 language: php
 before_script:
+ - composer self-update
  - composer install
+ - composer update
  - touch uploads/test.txt
 script: phpunit
 php:
