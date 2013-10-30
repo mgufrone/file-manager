@@ -1,0 +1,13 @@
+file:
+ path: /uploads
+ allowed_files:
+  - jpg
+  - png
+  - gif
+  - pdf
+  - docx
+  - doc
+  - xls
+  - xlsx
+  - ppt
+  - pptx

@@ -1,0 +1,29 @@
+{
+	"name":"File Manager",
+	"description":"Simple File Manager",
+	"authors":[
+		{
+			"name":"Mochamad Gufron",
+			"email":"mgufronefendi@gmail.com",
+			"homepage":"http://mgufron.com",
+			"role":"Developer"
+		}
+	],
+	"require":{
+		"silex/silex":"~1.1",
+		"symfony/yaml":">=v2.3.5",
+		"symfony/filesystem":">=v2.3.5",
+		"symfony/finder":">=v2.3.5",
+		"gufy/assets-services":"dev-master"
+	},
+	"require-dev":{
+		"symfony/dom-crawler":">=v2.3.5",
+		"symfony/css-selector":">=v2.3.5",
+		"symfony/browser-kit": ">=2.3,<2.4-dev"
+	},
+	"autoload":{
+		"psr-0":{
+			"FileService":"src/"
+		}
+	}
+}
