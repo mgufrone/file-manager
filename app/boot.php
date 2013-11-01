@@ -41,7 +41,7 @@ $app->register(new FileManagerService(), $config);
 * show index or landing page
 */
 $app->get('/',function() use($app){
-	return $app['twig']->render();
+	// return $app['twig']->render();
 })->bind('home');
 
 $app->get('files.json',function() use($app){
@@ -63,6 +63,7 @@ $app->post('copy.json',function(Request $req) use($app){
 })->bind('copy-file');
 
 
+
 $app->post('rename.json',function(Request $req) use($app){
 	$from = $req->get('from');
 	$to = $req->get('to');
@@ -77,15 +78,20 @@ $app->post('rename.json',function(Request $req) use($app){
 
 $app->post('delete.json',function(Request $req) use($app){
 	$file = $req->get('file');
-
-	$result = $app['filemanager']->delete($file);
+	$deleteDirectory = false;
+	if(empty($file))
+	{
+		$file = $req->get('folder');
+		$deleteDirectory = true;
+	}
+	$result = $app['filemanager']->delete($file, $deleteDirectory);
 	if($result)
-		$data = array('message'=>'Delete success','status'=>200, 'result'=>array('file'=>$file));
+		$data = array('message'=>'Delete success','status'=>200, 'result'=>$deleteDirectory?array('folder'=>$file):array('file'=>$file));
 	else
 		$data = array('message'=>'Delete failed','status'=>500);
 
 	return $app->json($data);
-})->bind('delete-file');
+})->bind('delete');
 
 $app->post('create.json',function(Request $req) use($app){
 	$location = $req->get('location');
@@ -99,4 +105,27 @@ $app->post('create.json',function(Request $req) use($app){
 	return $app->json($data);
 })->bind('create-directory');
 
+$app->post('move.json',function(Request $req) use($app){
+	$from = $req->get('from');
+	$to = $req->get('to');
+
+	$result = $app['filemanager']->move($from, $to);
+	if($result)
+		$data = array('message'=>'Moving file success','status'=>200, 'result'=>$result);
+	else
+		$data = array('message'=>'Moving file error','status'=>500);
+	return $app->json($data);
+});
+
+
+$app->post('upload.json',function(Request $req) use($app){
+	$file = $req->files->get('file');
+	$folder = $req->get('folder');
+	$result = $app['filemanager']->upload($file, $folder);
+	if($result)
+		$data = array('message'=>'Upload file success','status'=>200, 'result'=>$result);
+	else
+		$data = array('message'=>'Upload file error','status'=>500);
+	return $app->json($data);
+});
 return $app;

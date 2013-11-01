@@ -1,8 +1,10 @@
 <?php
 
 use Silex\WebTestCase;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
-class ListTest extends WebTestCase
+
+class FileTest extends WebTestCase
 {
 	public function createApplication()
 	{
@@ -85,6 +87,7 @@ class ListTest extends WebTestCase
 			)))), $client->getResponse()->getContent());
 
 	}
+
 	public function testDeleteFile()
 	{
 		$config = $this->app['file'];
@@ -100,29 +103,60 @@ class ListTest extends WebTestCase
 		$file = fopen($path.'/test.txt','w+');
 		fclose($file);
 	}
-	public function testCreateDirectory()
+
+	public function testMoveFile()
 	{
 		$config = $this->app['file'];
 		$path = $config['path'];
 		$app = $this->app;
 		$client = $this->createClient();
+
 		$crawler = $client->request('POST','create.json',array('location'=>'/','dirname'=>'hello'));
+		$crawler = $client->request('POST','move.json',array('from'=>'test.txt','to'=>'hello'));
+
 		$this->assertTrue($client->getResponse()->isOk());
 		$this->assertTrue(file_exists($path.'/hello/'));
 		$this->assertTrue(is_dir($path.'/hello/'));
+		$this->assertTrue(file_exists($path.'/hello/test.txt'));
+		$this->assertTrue(!file_exists($path.'/test.txt'));
 		// $this->assertTrue(file_exists($path.'/test.txt'));
-		$file = 'hello';
-		$this->assertEquals(json_encode(array('message'=>'Create directory success','status'=>200,'result'=>array_merge(pathinfo($path.'/'.$file),array(
+		$file = 'hello/test.txt';
+		$this->assertEquals(json_encode(array('message'=>'Moving file success','status'=>200,'result'=>array_merge(pathinfo($path.'/'.$file),array(
 				'size'=>filesize($path.'/'.$file),
 				'type'=>filetype($path.'/'.$file),
 				'url'=>$app['url_generator']->generate('home').str_replace($app['baseDir'],'',$path.'/'.$file)
 			)))), $client->getResponse()->getContent());
-		if(file_exists($path.'/'.$file))
-			rmdir($path.'/'.$file);
+		
+		$client->request('POST','move.json',array('from'=>'hello/test.txt','to'=>''));
+		$client->request('POST','delete.json',array('folder'=>'hello'));
 	}
 
 	public function testUpload()
 	{
-		
+		$config = $this->app['file'];
+		$path = $config['path'];
+		$app = $this->app;
+		$client = $this->createClient();
+		$photo = new UploadedFile(
+			dirname(__DIR__).'/assets/test.jpg',
+			'test.jpg',
+			'image/jpeg',
+			filesize(dirname(__DIR__).'/assets/test.jpg')
+		);
+		$client->request(
+			'POST',
+			'/upload.json',
+			array('folder'=>''),
+			array('file' => $photo)
+		);
+		$file = 'test.jpg';
+
+		$this->assertTrue($client->getResponse()->isOk());
+		$this->assertTrue(file_exists($path.'/'.$file));
+		$this->assertEquals(json_encode(array('message'=>'Upload file success','status'=>200,'result'=>array_merge(pathinfo($path.'/'.$file),array(
+			'size'=>filesize($path.'/'.$file),
+			'type'=>filetype($path.'/'.$file),
+			'url'=>$app['url_generator']->generate('home').str_replace($app['baseDir'],'',$path.'/'.$file)
+		)))), $client->getResponse()->getContent());
 	}
 }
