@@ -1,4 +1,4 @@
 {
-	"directory":"assets",
+	"directory":"app/lib/assets",
 	"json":"assets.json"
 }

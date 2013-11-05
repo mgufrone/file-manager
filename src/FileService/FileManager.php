@@ -5,8 +5,11 @@ use Silex\Application;
 class FileManager
 {
 	public $path;
-	public $allowedFiles;
+	public $allowed_files;
 	public $app;
+	const FILE_ALLOWED=40;
+	const EXTENSION_NOT_ALLOWED=41;
+	const MIME_NOT_ALLOWED=42;
 	public function __construct(Application $app, $options=array())
 	{
 		$this->app = $app;
@@ -37,18 +40,38 @@ class FileManager
 	{
 		$app = $this->app;
 		$baseDir = $app['file']['path'];
-		$result = false;
-		if(file_exists($baseDir.'/'.$to))
+		$code = false;
+		$data = array();
+		if(!in_array($file->getExtension(),$this->allowed_files))
+			$code = self::EXTENSION_NOT_ALLOWED;
+		else
 		{
-			$file->move($baseDir.'/'.$to, $file->getClientOriginalName());
-			$uploaded_file = $baseDir.'/'.$to.$file->getClientOriginalName();
-			$result = array_merge(pathinfo($uploaded_file),array(
-				'size'=>filesize($uploaded_file),
-				'type'=>filetype($uploaded_file),
-				'url'=>$app['url_generator']->generate('home').str_replace($app['baseDir'],'',$uploaded_file)
-			));
+			$code = self::FILE_ALLOWED;
 		}
-		return $result;
+		switch($code)
+		{
+			case self::EXTENSION_NOT_ALLOWED:
+				$data = array('message'=>'File you upload is not allowed','status'=>500);
+			break;
+			case self::FILE_ALLOWED:
+			if(file_exists($baseDir.'/'.$to))
+			{
+				$fileName = $file->getClientOriginalName();
+				$file->move($baseDir.'/'.$to, $fileName);
+				$uploaded_file = $baseDir.'/'.$to.$fileName;
+				$result = array_merge(pathinfo($uploaded_file),array(
+					'size'=>filesize($uploaded_file),
+					'type'=>filetype($uploaded_file),
+					'url'=>$app['url_generator']->generate('home').str_replace($app['baseDir'],'',$uploaded_file)
+				));
+
+				$data = array('message'=>'Upload file success','status'=>200, 'result'=>$result);
+			}
+			else
+				$data = array('message'=>'Upload file error','status'=>500);
+			break;
+		}
+		return $data;
 	}
 	public function rename($from, $to)
 	{

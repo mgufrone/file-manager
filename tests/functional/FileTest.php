@@ -10,7 +10,7 @@ class FileTest extends WebTestCase
 	{
 		$app = require __DIR__.'/../../app/boot.php';
 		$app['debug'] = true;
-    $app['exception_handler']->disable();
+   		$app['exception_handler']->disable();
 		return $app;
 		// return require __DIR__.'/path/to/app.php';
 	}
@@ -158,5 +158,30 @@ class FileTest extends WebTestCase
 			'type'=>filetype($path.'/'.$file),
 			'url'=>$app['url_generator']->generate('home').str_replace($app['baseDir'],'',$path.'/'.$file)
 		)))), $client->getResponse()->getContent());
+		rename($path.'/'.$file, dirname(__DIR__).'/assets/'.$file);
+	}
+	public function testNotAllowedFileUpload()
+	{
+		$config = $this->app['file'];
+		$path = $config['path'];
+		$app = $this->app;
+		$client = $this->createClient();
+		$photo = new UploadedFile(
+			dirname(__DIR__).'/assets/test.csv',
+			'test.jpg',
+			'image/jpeg',
+			filesize(dirname(__DIR__).'/assets/test.csv')
+		);
+		$client->request(
+			'POST',
+			'/upload.json',
+			array('folder'=>''),
+			array('file' => $photo)
+		);
+		$file = 'test.csv';
+
+		$this->assertTrue($client->getResponse()->isOk());
+		$this->assertTrue(!file_exists($path.'/'.$file));
+		$this->assertEquals(json_encode(array('message'=>'File you upload is not allowed','status'=>500)),$client->getResponse()->getContent());
 	}
 }

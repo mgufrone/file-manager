@@ -18,10 +18,17 @@ use Silex\Provider\SessionServiceProvider;
 use Silex\Provider\TwigServiceProvider;
 use Symfony\Component\Yaml\Parser;
 use FileService\FileManagerService;
+use FileService\FileManager;
+use Gufy\Service\Provider\AssetsServiceProvider;
 
 // registering needed service and providers
 $app = new Silex\Application();
 Request::enableHttpMethodParameterOverride();
+$app['env'] = 'dev';
+$app->register(new AssetsServiceProvider,array(
+	'assets.js'=>array('assets/file-manager.min.js'),
+	'assets.css'=>array('assets/file-manager.min.css'),
+));
 $yaml = new Parser;
 $config = $yaml->parse(file_get_contents(__DIR__.'/config/config.yml'));
 $config['file']['path'] = dirname(__DIR__).$config['file']['path'];
@@ -41,7 +48,12 @@ $app->register(new FileManagerService(), $config);
 * show index or landing page
 */
 $app->get('/',function() use($app){
-	// return $app['twig']->render();
+	$data = array(
+		'base'=>array(
+			'path'=>$app['url_generator']->generate('home')
+		)
+	);
+	return $app['twig']->render('index.tpl',$data);
 })->bind('home');
 
 $app->get('files.json',function() use($app){
@@ -121,11 +133,9 @@ $app->post('move.json',function(Request $req) use($app){
 $app->post('upload.json',function(Request $req) use($app){
 	$file = $req->files->get('file');
 	$folder = $req->get('folder');
-	$result = $app['filemanager']->upload($file, $folder);
-	if($result)
-		$data = array('message'=>'Upload file success','status'=>200, 'result'=>$result);
-	else
-		$data = array('message'=>'Upload file error','status'=>500);
+	$data = $app['filemanager']->upload($file, $folder);
+
 	return $app->json($data);
 });
+
 return $app;
